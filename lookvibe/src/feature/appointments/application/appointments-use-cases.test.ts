@@ -134,18 +134,33 @@ describe('appointment command use cases', () => {
 
   it('sets completed and not-realized outcomes, rejecting invalid inputs', async () => {
     const repository = new InMemoryAppointmentRepository([anAppointment()]);
-    const useCase = new SetAppointmentOutcomeUseCase(repository);
+    const now = new Date('2026-11-18T15:00:00.000Z');
+    const useCase = new SetAppointmentOutcomeUseCase(repository, () => now);
+    const startsAt = new Date('2026-11-18T14:00:00.000Z');
 
-    await useCase.execute({ id: ' appointment-1 ', completed: true });
-    await useCase.execute({ id: 'appointment-1', completed: false });
+    await useCase.execute({ id: ' appointment-1 ', completed: true, startsAt });
+    await useCase.execute({ id: 'appointment-1', completed: false, startsAt: now });
     expect(repository.completions).toEqual([
       { id: 'appointment-1', completed: true },
       { id: 'appointment-1', completed: false },
     ]);
-    expect(() => useCase.execute({ id: ' ', completed: true })).toThrow(InvalidAppointmentError);
-    expect(() => useCase.execute({ id: 'appointment-1', completed: 'yes' as unknown as boolean }))
+    expect(() => useCase.execute({ id: ' ', completed: true, startsAt })).toThrow(InvalidAppointmentError);
+    expect(() => useCase.execute({ id: 'appointment-1', completed: 'yes' as unknown as boolean, startsAt }))
       .toThrow(InvalidAppointmentError);
     expect(repository.completions).toHaveLength(2);
+  });
+
+  it('does not allow recording the outcome before the appointment date and time', () => {
+    const repository = new InMemoryAppointmentRepository([anAppointment()]);
+    const useCase = new SetAppointmentOutcomeUseCase(repository, () => new Date('2026-11-18T15:00:00.000Z'));
+
+    expect(() => useCase.execute({ id: 'appointment-1', completed: true, startsAt: new Date('2026-11-20T15:00:00.000Z') }))
+      .toThrow('Solo puedes registrar el resultado');
+    expect(() => useCase.execute({ id: 'appointment-1', completed: false, startsAt: new Date('2026-11-18T15:01:00.000Z') }))
+      .toThrow(InvalidAppointmentError);
+    expect(() => useCase.execute({ id: 'appointment-1', completed: true, startsAt: new Date('nope') }))
+      .toThrow(InvalidAppointmentError);
+    expect(repository.completions).toHaveLength(0);
   });
 });
 

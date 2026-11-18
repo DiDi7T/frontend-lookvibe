@@ -12,3 +12,8 @@ export interface CreateReviewRequestDto {
   calificacion: number;
   comentario: string;
 }
+
+export interface ExploreResponseDto {
+  negocios?: { id: string; nombre?: string | null }[];
+  estilistas?: { id: string; especialidad?: string | null; usuario?: { nombre?: string | null } | null }[];
+}

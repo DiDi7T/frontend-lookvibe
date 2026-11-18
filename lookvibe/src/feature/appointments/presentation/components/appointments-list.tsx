@@ -6,6 +6,7 @@ import type { Appointment } from '../../domain/entities/appointment';
 import type { AppointmentSlot } from '../../domain/entities/appointment-slot';
 import type { BookingBusinessSchedule } from '../../domain/entities/booking-business';
 import { useCurrentSession } from '../../../auth/presentation/hooks/use-current-session';
+import { canBookAppointments } from '../../domain/value-objects/booking-access';
 import { AppointmentsProvider, useAppointments } from '../hooks/use-appointments';
 import { dispatchNewBookingStarted } from '../../../../shared/presentation/booking-events';
 import { ReviewAppointmentButton } from '../../../reviews/presentation/components/review-appointment-button';
@@ -38,10 +39,10 @@ function AppointmentsListContent() {
   const [currentTime, setCurrentTime] = useState(0);
   const [rejectedRescheduleKey, setRejectedRescheduleKey] = useState('');
   const roles = session?.roles ?? [];
-  const canBook = roles.some((role) => role === 'cliente' || role === 'admin');
-  const showClientName = roles.some((role) => role === 'negocio' || role === 'estilista' || role === 'admin');
-  const canCancel = roles.some((role) => role === 'cliente' || role === 'negocio' || role === 'estilista' || role === 'admin');
-  const canComplete = roles.some((role) => role === 'negocio' || role === 'estilista' || role === 'admin');
+  const canBook = canBookAppointments(roles);
+  const showClientName = roles.some((role) => role === 'negocio' || role === 'estilista');
+  const canCancel = roles.some((role) => role === 'cliente' || role === 'negocio' || role === 'estilista');
+  const canComplete = roles.some((role) => role === 'negocio' || role === 'estilista');
 
   useEffect(() => {
     if (session) void loadAppointments();
@@ -145,7 +146,7 @@ function AppointmentsListContent() {
   }
 
   async function updateOutcome(appointment: Appointment, completed: boolean) {
-    const updated = await setAppointmentOutcome({ id: appointment.id, completed });
+    const updated = await setAppointmentOutcome({ id: appointment.id, completed, startsAt: appointment.startsAt.toDate() });
     if (updated) {
       setActionMessage(completed ? 'La cita quedó marcada como completada.' : 'La cita quedó marcada como no realizada.');
       await loadAppointments();
@@ -194,9 +195,9 @@ function AppointmentsListContent() {
               appointment={appointment}
               canCancel={canCancel}
               canComplete={canComplete}
+              outcomeAvailable={currentTime > 0 && appointment.hasStartedBy(new Date(currentTime))}
               showClientName={showClientName}
-              canReschedule={roles.includes('admin')
-                || roles.includes('cliente')
+              canReschedule={roles.includes('cliente')
                 || roles.includes('negocio')
                 || (roles.includes('estilista') && appointment.stylistSummary?.affiliationStatus === 'INDEPENDIENTE')}
               editing={editingId === appointment.id}
@@ -241,6 +242,7 @@ function AppointmentCard({
   appointment,
   canCancel,
   canComplete,
+  outcomeAvailable,
   showClientName,
   canReschedule,
   editing,
@@ -267,6 +269,7 @@ function AppointmentCard({
   appointment: Appointment;
   canCancel: boolean;
   canComplete: boolean;
+  outcomeAvailable: boolean;
   showClientName: boolean;
   canReschedule: boolean;
   editing: boolean;
@@ -327,8 +330,9 @@ function AppointmentCard({
           <div className="mt-3 flex flex-wrap gap-2">
             {canReschedule && <button type="button" onClick={onEdit} className="flex-1 rounded-xl border border-white/10 px-3 py-2.5 text-sm font-semibold text-slate-100 transition hover:bg-white/5">↻ Reagendar</button>}
             {canCancel && <button type="button" onClick={onCancel} className="flex-1 rounded-xl border border-white/10 px-3 py-2.5 text-sm font-semibold text-slate-100 transition hover:bg-white/5">× Cancelar</button>}
-            {canComplete && <button type="button" onClick={() => onSetOutcome(true)} disabled={loading} className="flex-1 rounded-xl bg-[#10b981] px-3 py-2.5 text-sm font-bold text-[#0f172a] disabled:opacity-50">✓ Completar</button>}
-            {canComplete && <button type="button" onClick={() => onSetOutcome(false)} disabled={loading} className="flex-1 rounded-xl border border-white/10 px-3 py-2.5 text-sm font-semibold text-slate-100 transition hover:bg-white/5 disabled:opacity-50">Marcar no realizada</button>}
+            {canComplete && <button type="button" onClick={() => onSetOutcome(true)} disabled={loading || !outcomeAvailable} className="flex-1 rounded-xl bg-[#10b981] px-3 py-2.5 text-sm font-bold text-[#0f172a] disabled:cursor-not-allowed disabled:opacity-50">✓ Completar</button>}
+            {canComplete && <button type="button" onClick={() => onSetOutcome(false)} disabled={loading || !outcomeAvailable} className="flex-1 rounded-xl border border-white/10 px-3 py-2.5 text-sm font-semibold text-slate-100 transition hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-50">Marcar no realizada</button>}
+            {canComplete && !outcomeAvailable && <p className="w-full text-xs text-slate-400">Podrás marcarla como completada o no realizada cuando lleguen la fecha y la hora de la cita.</p>}
           </div>
         )}
 

@@ -3,11 +3,15 @@ import { Review, type ReviewInput } from '../domain/entities/review';
 import { InvalidReviewError } from '../domain/errors/invalid-review-error';
 import { ReviewAlreadyExistsError } from '../domain/errors/review-already-exists-error';
 import { ReviewDraft } from '../domain/value-objects/review-draft';
+import { ModerationQueue } from '../domain/value-objects/moderation-queue';
 import { ReviewManagers } from '../domain/value-objects/review-managers';
+import type { ReviewTargetRef } from '../domain/value-objects/review-target-ref';
 import type { ReviewRepository, ReviewTarget } from './repositories/review-repository';
 import type { ReviewedAppointmentsRegistry } from './repositories/reviewed-appointments-registry';
+import type { ReviewTargetDirectory } from './repositories/review-target-directory';
 import { CreateReviewUseCase } from './use-cases/create-review.use-case';
 import { DeleteReviewUseCase } from './use-cases/delete-review.use-case';
+import { GetModerationQueueUseCase } from './use-cases/get-moderation-queue.use-case';
 import { GetReviewsUseCase } from './use-cases/get-reviews.use-case';
 import { HasReviewedAppointmentUseCase } from './use-cases/has-reviewed-appointment.use-case';
 import { ReportReviewUseCase } from './use-cases/report-review.use-case';
@@ -182,5 +186,43 @@ describe('ReviewManagers', () => {
     expect(managers.includes('u-dueno', ['b-1'])).toBe(true);
     expect(managers.includes('u-dueno', ['b-2'])).toBe(false);
     expect(ReviewManagers.create({ userIds: [] }).includes('u-dueno', ['b-1'])).toBe(false);
+  });
+});
+
+describe('ModerationQueue', () => {
+  const business: ReviewTargetRef = { kind: 'business', id: 'b-1', name: 'Zen Spa' };
+  const stylist: ReviewTargetRef = { kind: 'stylist', id: 'e-1', name: 'Valentina' };
+
+  it('pone primero las reportadas, sin repetir reseñas y priorizando el negocio', () => {
+    const shared = aReview({ id: 'compartida', createdAt: '2026-11-01T10:00:00Z' });
+    const queue = ModerationQueue.from([
+      { target: stylist, reviews: [shared] },
+      { target: business, reviews: [shared, aReview({ id: 'reportada', reported: true, createdAt: '2026-10-01T10:00:00Z' })] },
+    ]);
+
+    expect(queue.items.map((item) => item.review.id)).toEqual(['reportada', 'compartida']);
+    expect(queue.items[1].target).toEqual(business);
+    expect(queue.reported.map((item) => item.review.id)).toEqual(['reportada']);
+    expect(queue.without('reportada').items).toHaveLength(1);
+  });
+});
+
+describe('GetModerationQueueUseCase', () => {
+  it('reúne las reseñas de todos los negocios y estilistas', async () => {
+    const directory: ReviewTargetDirectory = {
+      findAll: async () => [
+        { kind: 'business', id: 'b-1', name: 'Zen Spa' },
+        { kind: 'stylist', id: 'e-1', name: 'Valentina' },
+      ],
+    };
+    const repository = new InMemoryReviewRepository([aReview({ id: 'r-1', reported: true })]);
+
+    const queue = await new GetModerationQueueUseCase(repository, directory).execute();
+
+    expect(repository.requested).toEqual([
+      { target: 'business', id: 'b-1' },
+      { target: 'stylist', id: 'e-1' },
+    ]);
+    expect(queue.reported).toHaveLength(1);
   });
 });

@@ -4,28 +4,34 @@ import { useState, type FormEvent } from 'react';
 import { FeedbackMessage } from '../../../../shared/components/feedback-message';
 import { FormField, inputClassName } from '../../../../shared/components/form-field';
 import { useCurrentSession } from '../../../auth/presentation/hooks/use-current-session';
+import { useOwnsBusiness } from '../../../businesses/presentation/hooks/use-owns-business';
 import type { PortfolioOwnerKind } from '../../domain/value-objects/portfolio-owner';
 import { usePortfolio } from '../hooks/use-portfolio';
 import { PortfolioGallery } from './portfolio-gallery';
-
-const MANAGER_ROLES: Record<PortfolioOwnerKind, readonly string[]> = {
-  business: ['negocio', 'admin'],
-  stylist: ['estilista', 'negocio', 'admin'],
-};
 
 interface PortfolioSectionProps {
   ownerKind: PortfolioOwnerKind;
   ownerId: string;
   title?: string;
+  managerUserIds?: readonly (string | null | undefined)[];
+  managingBusinessId?: string | null;
 }
 
-export function PortfolioSection({ ownerKind, ownerId, title = 'Portafolio' }: PortfolioSectionProps) {
+export function PortfolioSection({
+  ownerKind,
+  ownerId,
+  title = 'Portafolio',
+  managerUserIds = [],
+  managingBusinessId = null,
+}: PortfolioSectionProps) {
   const session = useCurrentSession();
   const { items, loading, loadError, adding, error, success, add } = usePortfolio(ownerKind, ownerId);
   const [photoUrl, setPhotoUrl] = useState('');
   const [description, setDescription] = useState('');
   const [open, setOpen] = useState(false);
-  const canManage = session?.roles.some((role) => MANAGER_ROLES[ownerKind].includes(role)) ?? false;
+  const ownsBusiness = useOwnsBusiness(managingBusinessId);
+  const isManagerAccount = session !== null && managerUserIds.includes(session.userId);
+  const canManage = isManagerAccount || ownsBusiness;
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();

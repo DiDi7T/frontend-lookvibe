@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import type { Stylist } from '../../domain/entities/stylist';
+import { BookingLink } from '../../../appointments/presentation/components/booking-link';
 import { StylistAvatar } from './stylist-avatar';
 
 export function StylistTeam({ stylists, businessId }: { stylists: Stylist[]; businessId: string }) {
@@ -21,12 +22,7 @@ export function StylistTeam({ stylists, businessId }: { stylists: Stylist[]; bus
               {stylist.name && <p className="mt-0.5 truncate text-sm text-slate-400">{stylist.specialty}</p>}
             </div>
           </Link>
-          <Link
-            href={`/appointments/new?businessId=${encodeURIComponent(businessId)}&stylistId=${encodeURIComponent(stylist.id)}`}
-            className="rounded-xl bg-[#f59e0b] px-4 py-2 text-sm font-bold text-[#0f172a] hover:bg-amber-300"
-          >
-            Agendar
-          </Link>
+          <BookingLink businessId={businessId} stylistId={stylist.id} />
         </li>
       ))}
     </ul>

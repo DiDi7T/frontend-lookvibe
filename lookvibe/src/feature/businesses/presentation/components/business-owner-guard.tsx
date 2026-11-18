@@ -9,7 +9,7 @@ const subscribeToNothing = () => () => {};
 export function BusinessOwnerGuard({ children }: { children: ReactNode }) {
   const isClient = useSyncExternalStore(subscribeToNothing, () => true, () => false);
   const session = useCurrentSession();
-  const canManage = session?.roles.some((role) => role === 'negocio' || role === 'admin') ?? false;
+  const canManage = session?.roles.includes('negocio') ?? false;
 
   if (!isClient) {
     return <p className="mx-auto mt-16 text-center text-sm text-slate-400">Verificando tu sesión…</p>;
@@ -29,7 +29,7 @@ export function BusinessOwnerGuard({ children }: { children: ReactNode }) {
     return (
       <GuardMessage
         title="No tienes acceso a esta sección"
-        description="Solo las cuentas con rol de negocio o administración pueden gestionar negocios."
+        description="Solo las cuentas con rol de negocio pueden gestionar negocios."
         action={<Link href="/businesses" className="mt-5 inline-flex rounded-xl border border-white/20 px-5 py-3 font-display font-semibold text-white">Ver negocios</Link>}
       />
     );

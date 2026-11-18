@@ -4,13 +4,15 @@ import { useRouter } from 'next/navigation';
 import { DashboardNavbar } from '../../../../shared/components/dashboard-navbar';
 import { authContainer } from '../../di/auth.container';
 import { useCurrentSession } from '../hooks/use-current-session';
+import { canAccessAppointments, canBookAppointments } from '../../../appointments/domain/value-objects/booking-access';
 
 export function AppNavbar() {
   const session = useCurrentSession();
   const router = useRouter();
-  const canBook = session?.roles.some((role) => role === 'cliente' || role === 'admin') ?? false;
-  const canManageBusinesses = session?.roles.some((role) => role === 'negocio' || role === 'admin') ?? false;
-  const canViewReports = canManageBusinesses;
+  const canBook = canBookAppointments(session?.roles);
+  const isAdmin = session?.roles.includes('admin') ?? false;
+  const canManageBusinesses = session?.roles.includes('negocio') ?? false;
+  const canViewReports = canManageBusinesses || isAdmin;
   const isStylist = session?.roles.includes('estilista') ?? false;
 
   async function logout() {
@@ -25,8 +27,11 @@ export function AppNavbar() {
       userEmail={session?.email}
       isAuthenticated={session !== null}
       canBook={canBook}
+      canBrowseBusinesses={!isAdmin}
       canManageBusinesses={canManageBusinesses}
       canViewReports={canViewReports}
+      canModerateReviews={isAdmin}
+      canViewAppointments={canAccessAppointments(session?.roles)}
       isStylist={isStylist}
       onLogout={() => { void logout(); }}
     />

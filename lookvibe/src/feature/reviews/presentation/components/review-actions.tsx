@@ -13,7 +13,13 @@ const CONFIRM_TEXT = {
   delete: '¿Eliminar esta reseña por incumplir las políticas? No se puede deshacer.',
 };
 
-export function ReviewActions({ reviewId, reported }: { reviewId: string; reported: boolean }) {
+interface ReviewActionsProps {
+  reviewId: string;
+  reported: boolean;
+  onDone?: () => void;
+}
+
+export function ReviewActions({ reviewId, reported, onDone }: ReviewActionsProps) {
   const router = useRouter();
   const { canModerate, canReport } = useReviewPermissions();
   const { report, reporting, error: reportError } = useReportReview();
@@ -27,7 +33,8 @@ export function ReviewActions({ reviewId, reported }: { reviewId: string; report
     const done = pending === 'delete' ? await remove(reviewId) : await report(reviewId);
     if (done) {
       setPending(null);
-      router.refresh();
+      if (onDone) onDone();
+      else router.refresh();
     }
   }
 

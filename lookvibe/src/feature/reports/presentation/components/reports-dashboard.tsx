@@ -96,10 +96,10 @@ export function ReportsDashboard() {
               </select>
             </label>
             <label className="grid gap-2 text-sm text-slate-300">Desde
-              <input type="date" value={from} max={to || undefined} onChange={(event) => setFrom(event.target.value)} required className="min-h-11 rounded-lg border border-white/15 bg-[#131926] px-3 text-white outline-none focus:border-amber-400" />
+              <input type="date" value={from} onChange={(event) => setFrom(event.target.value)} required className="min-h-11 rounded-lg border border-white/15 bg-[#131926] px-3 text-white outline-none focus:border-amber-400" />
             </label>
             <label className="grid gap-2 text-sm text-slate-300">Hasta
-              <input type="date" value={to} min={from || undefined} max={toDateInput(new Date())} onChange={(event) => setTo(event.target.value)} required className="min-h-11 rounded-lg border border-white/15 bg-[#131926] px-3 text-white outline-none focus:border-amber-400" />
+              <input type="date" value={to} onChange={(event) => setTo(event.target.value)} required className="min-h-11 rounded-lg border border-white/15 bg-[#131926] px-3 text-white outline-none focus:border-amber-400" />
             </label>
             <button type="submit" disabled={loading.report || !businessId || !from || !to}
               className="min-h-11 rounded-lg border border-emerald-400/50 px-5 text-sm font-bold text-emerald-300 transition hover:bg-emerald-400/10 disabled:cursor-not-allowed disabled:opacity-50">
@@ -236,13 +236,6 @@ function StatusRow({ label, value, total, color }: { label: string; value: numbe
 
 function ReportSkeleton() {
   return <div aria-label="Cargando reportes" className="grid animate-pulse gap-4 sm:grid-cols-2 xl:grid-cols-4">{[1, 2, 3, 4].map((item) => <div key={item} className="h-24 border-l-2 border-white/10 bg-white/[0.03]" />)}</div>;
-}
-
-function toDateInput(date: Date): string {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
 }
 
 function createDefaultPeriod(): { from: string; to: string } {

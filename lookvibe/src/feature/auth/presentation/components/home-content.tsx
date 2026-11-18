@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useCurrentSession } from '../hooks/use-current-session';
+import { canBookAppointments } from '../../../appointments/domain/value-objects/booking-access';
 
 const roleCopy: Record<string, { title: string; description: string }> = {
   cliente: {
@@ -29,7 +30,7 @@ export function HomeContent() {
     title: 'Tu próximo momento de cuidado empieza aquí.',
     description: 'Descubre servicios de belleza y encuentra un horario que se ajuste a ti.',
   };
-  const canBook = session?.roles.some((item) => item === 'cliente' || item === 'admin') ?? false;
+  const canBook = canBookAppointments(session?.roles);
 
   return (
     <main className="relative flex flex-1 items-center overflow-hidden bg-[#0f172a] text-white">

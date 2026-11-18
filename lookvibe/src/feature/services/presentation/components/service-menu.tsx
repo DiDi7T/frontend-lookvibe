@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import { BookingLink } from '../../../appointments/presentation/components/booking-link';
 import type { Service } from '../../domain/entities/service';
 import { formatServiceDuration, formatServicePrice } from './service-format';
 
@@ -17,7 +17,7 @@ export function ServiceMenu({ services, businessId }: { services: Service[]; bus
           </div>
           <div className="flex items-center gap-4">
             <p className="shrink-0 font-display text-lg font-bold text-[#f9c784]">{formatServicePrice(service)}</p>
-            <Link href={`/appointments/new?businessId=${encodeURIComponent(businessId)}&serviceId=${encodeURIComponent(service.id)}`} className="rounded-xl bg-[#f59e0b] px-4 py-2 text-sm font-bold text-[#0f172a] hover:bg-amber-300">Agendar</Link>
+            <BookingLink businessId={businessId} serviceId={service.id} />
           </div>
         </li>
       ))}

@@ -20,7 +20,7 @@ export default async function ManageBusinessPage({ params }: ManageBusinessPageP
       businessId={id}
       servicesPanel={<ServiceManager businessId={id} />}
       stylistsPanel={<StylistManager businessId={id} />}
-      portfolioPanel={<PortfolioSection ownerKind="business" ownerId={id} title="Portafolio del negocio" />}
+      portfolioPanel={<PortfolioSection ownerKind="business" ownerId={id} title="Portafolio del negocio" managingBusinessId={id} />}
     />
   );
 }

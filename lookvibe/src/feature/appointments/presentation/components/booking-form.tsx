@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import type { Appointment } from '../../domain/entities/appointment';
 import type { AppointmentSlot } from '../../domain/entities/appointment-slot';
 import { useCurrentSession } from '../../../auth/presentation/hooks/use-current-session';
+import { canBookAppointments } from '../../domain/value-objects/booking-access';
 import { AppointmentsProvider, useAppointments } from '../hooks/use-appointments';
 import { APPOINTMENT_CANCELLED_EVENT, NEW_BOOKING_EVENT } from '../../../../shared/presentation/booking-events';
 
@@ -66,7 +67,7 @@ function BookingFormContent({ initialBusinessId, initialServiceId, initialStylis
   const selectedStylist = currentBusinessStylists.find((stylist) => stylist.id === stylistId);
   const currentAvailabilityKey = getAvailabilityKey(businessId, serviceId, stylistId, date);
   const currentAvailabilitySlots = queriedAvailabilityKey === currentAvailabilityKey ? availabilitySlots : [];
-  const canBook = session?.roles.some((role) => role === 'cliente' || role === 'admin') ?? false;
+  const canBook = canBookAppointments(session?.roles);
   const visibleAvailabilitySlots = currentAvailabilitySlots.filter((slot) => {
     const startMinutes = minutesInTimeZone(slot.startsAt.toDate(), slot.timeZone);
     const endMinutes = minutesInTimeZone(slot.endsAt.toDate(), slot.timeZone);
@@ -225,7 +226,7 @@ function BookingFormContent({ initialBusinessId, initialServiceId, initialStylis
         <section className="rounded-3xl border border-white/10 bg-[#172033] p-7 text-center shadow-xl">
           <span className="mx-auto flex size-14 items-center justify-center rounded-2xl bg-[#f59e0b]/15 text-2xl text-[#f9c784]">✦</span>
           <h1 className="mt-5 font-display text-2xl font-bold">{isSignedIn ? 'Tu rol no puede reservar citas' : 'Agenda una experiencia para ti'}</h1>
-          <p className="mt-3 text-sm leading-6 text-slate-300">{isSignedIn ? 'La reserva de citas está disponible para clientes y administradores.' : 'Inicia sesión con una cuenta de cliente para elegir un servicio y reservar.'}</p>
+          <p className="mt-3 text-sm leading-6 text-slate-300">{isSignedIn ? 'La reserva de citas está disponible solo para cuentas de cliente.' : 'Inicia sesión con una cuenta de cliente para elegir un servicio y reservar.'}</p>
           {isSignedIn
             ? <Link href="/appointments" className="mt-6 inline-flex rounded-xl bg-[#f59e0b] px-5 py-3 font-display font-bold text-[#0f172a]">Volver a gestión de citas</Link>
             : <Link href="/login" className="mt-6 inline-flex rounded-xl bg-[#f59e0b] px-5 py-3 font-display font-bold text-[#0f172a]">Iniciar sesión</Link>}

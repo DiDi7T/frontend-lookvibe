@@ -101,6 +101,10 @@ export class Appointment {
       input.welcomeBenefitApplied ?? false,
     );
   }
+
+  hasStartedBy(now: Date): boolean {
+    return this.startsAt.toDate().getTime() <= now.getTime();
+  }
 }
 
 function requireId(value: string, label: string): string {

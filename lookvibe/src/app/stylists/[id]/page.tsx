@@ -41,7 +41,14 @@ export default async function StylistPage({ params, searchParams }: StylistPageP
     <StylistProfile
       stylist={stylist}
       invitation={inviteToken ? { code: inviteCode, businessName: invitingBusiness?.name ?? null } : null}
-      portfolio={<PortfolioSection ownerKind="stylist" ownerId={stylist.id} />}
+      portfolio={
+        <PortfolioSection
+          ownerKind="stylist"
+          ownerId={stylist.id}
+          managerUserIds={[stylist.accountId]}
+          managingBusinessId={stylist.business?.id}
+        />
+      }
       reviews={
         <ReviewList
           summary={reviews}

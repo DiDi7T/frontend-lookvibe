@@ -43,7 +43,7 @@ export default async function BusinessPage({ params }: BusinessPageProps) {
       actions={<BusinessActions bookable={business.isBookable} businessId={business.id} />}
       services={<ServiceMenu services={services} businessId={business.id} />}
       stylists={<StylistTeam stylists={stylists} businessId={business.id} />}
-      portfolio={<PortfolioSection ownerKind="business" ownerId={business.id} title="Portafolio del negocio" />}
+      portfolio={<PortfolioSection ownerKind="business" ownerId={business.id} title="Portafolio del negocio" managingBusinessId={business.id} />}
       reviews={<ReviewList summary={reviews} managers={{ userIds: [], businessId: business.id }} />}
     />
   );
